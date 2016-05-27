@@ -48,8 +48,8 @@ public class LauncherAdapter extends RecyclerView.Adapter<LauncherAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         App app = mAppList.get(position);
-        holder.mImageView.setImageDrawable(app.app_icon);
-        holder.mTextView.setText(app.app_label);
+        holder.mImageView.setImageDrawable(app.getApp_icon());
+        holder.mTextView.setText(app.getApp_label());
 
     }
 

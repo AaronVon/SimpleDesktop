@@ -20,6 +20,7 @@ import com.pioneer.aaron.simpledesktop.adapter.LauncherAdapter;
 import com.pioneer.aaron.simpledesktop.adapter.RecyclerViewItemClickListener;
 import com.pioneer.aaron.simpledesktop.adapter.RecyclerViewItemLongClickListener;
 import com.pioneer.aaron.simpledesktop.module.App;
+import com.pioneer.aaron.simpledesktop.module.AppUtil;
 import com.pioneer.aaron.simpledesktop.util.Constant;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class LauncherFragment extends Fragment implements RecyclerViewItemClickL
     private View rootView;
     private RecyclerView mRecyclerView;
     private PullRefreshLayout mPullRefreshLayout;
-    private List<App> mApps;
+    private ArrayList<App> mApps;
 
 
     @Override
@@ -66,7 +67,7 @@ public class LauncherFragment extends Fragment implements RecyclerViewItemClickL
         });
 
         mApps = new ArrayList<>();
-        mApps = updateList();
+        mApps = AppUtil.get(getActivity()).getFilteredApps();
 
         LauncherAdapter adapter = new LauncherAdapter(mApps);
         adapter.setItemClickListener(this);
@@ -75,48 +76,6 @@ public class LauncherFragment extends Fragment implements RecyclerViewItemClickL
         mRecyclerView.setAdapter(adapter);
     }
 
-    private List<App> updateList() {
-        Intent startIntent = new Intent(Intent.ACTION_MAIN);
-        startIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PackageManager pm = getActivity().getPackageManager();
-        List<ResolveInfo> rawList = pm.queryIntentActivities(startIntent, 0);
-
-        // sort list from A to Z
-        Collections.sort(rawList, new Comparator<ResolveInfo>() {
-            @Override
-            public int compare(ResolveInfo lhs, ResolveInfo rhs) {
-                PackageManager pm = getActivity().getPackageManager();
-
-                return String.CASE_INSENSITIVE_ORDER.compare(
-                        lhs.loadLabel(pm).toString(),
-                        rhs.loadLabel(pm).toString()
-                );
-            }
-        });
-
-        List<App> result = new ArrayList<>();
-        for (ResolveInfo ri : rawList) {
-            Drawable icon = ri.loadIcon(pm);
-            String label = ri.loadLabel(pm).toString();
-            App app = new App(icon, label);
-            result.add(app);
-        }
-
-        // Filter Activities
-        result = filterActivities(result);
-
-        return result;
-    }
-
-    private List<App> filterActivities(List<App> data) {
-        List<App> result = new ArrayList<>();
-        for (App a : data) {
-            if (!Constant.DEFAULT_FILTER.contains(a.app_label)) {
-                result.add(a);
-            }
-        }
-        return result;
-    }
 
     @Override
     public void onItemClick(View view, int position) {
