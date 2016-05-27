@@ -59,6 +59,7 @@ public class AppUtil {
             }
         });
 
+        mApps.clear();
         for (ResolveInfo ri : list) {
             String label = ri.loadLabel(pm).toString();
             if (!Constant.DEFAULT_FILTER.contains(label)) {
