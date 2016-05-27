@@ -1,6 +1,7 @@
 package com.pioneer.aaron.simpledesktop;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
@@ -11,6 +12,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,15 +36,19 @@ import java.util.List;
 public class LauncherFragment extends Fragment implements RecyclerViewItemClickListener, RecyclerViewItemLongClickListener {
 
     private View rootView;
-    private RecyclerView mRecyclerView;
-    private PullRefreshLayout mPullRefreshLayout;
     private ArrayList<App> mApps;
-
+    private RecyclerView recyclerView;
+    private PullRefreshLayout pullRefreshLayout;
+    private LauncherAdapter mAdapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        mApps = AppUtil.get(getActivity()).getFilteredApps();
+        mAdapter = new LauncherAdapter(mApps);
+        mAdapter.setItemClickListener(this);
+        mAdapter.setItemLongClickListener(this);
     }
 
     @Nullable
@@ -50,36 +56,39 @@ public class LauncherFragment extends Fragment implements RecyclerViewItemClickL
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.launcher_layout, container, false);
 
-        initFragment();
+        recyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        pullRefreshLayout = (PullRefreshLayout) rootView.findViewById(R.id.swipRefreshLayout);
+        pullRefreshLayout.setRefreshStyle(PullRefreshLayout.STYLE_WATER_DROP);
+        pullRefreshLayout.setOnRefreshListener(new PullRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                pullRefreshLayout.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        pullRefreshLayout.setRefreshing(false);
+                    }
+                }, 1000);
+            }
+        });
+        recyclerView.setAdapter(mAdapter);
+
         return rootView;
     }
 
-    private void initFragment() {
-        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerView);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        mPullRefreshLayout = (PullRefreshLayout) rootView.findViewById(R.id.swipRefreshLayout);
-        mPullRefreshLayout.setRefreshStyle(PullRefreshLayout.STYLE_WATER_DROP);
-        mPullRefreshLayout.setOnRefreshListener(new PullRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-
-            }
-        });
-
-        mApps = new ArrayList<>();
-        mApps = AppUtil.get(getActivity()).getFilteredApps();
-
-        LauncherAdapter adapter = new LauncherAdapter(mApps);
-        adapter.setItemClickListener(this);
-        adapter.setItemLongClickListener(this);
-
-        mRecyclerView.setAdapter(adapter);
-    }
-
-
     @Override
     public void onItemClick(View view, int position) {
+        App item = mApps.get(position);
 
+        ResolveInfo resolveInfo = item.getResolveInfo();
+        ActivityInfo activityInfo = resolveInfo.activityInfo;
+        if (activityInfo == null) {
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.setClassName(activityInfo.applicationInfo.packageName, activityInfo.name);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     @Override
