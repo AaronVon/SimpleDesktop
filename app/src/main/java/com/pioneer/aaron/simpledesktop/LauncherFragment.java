@@ -93,6 +93,9 @@ public class LauncherFragment extends Fragment implements RecyclerViewItemClickL
 
     @Override
     public void onItemLongClick(View view, int position) {
+        App item = mApps.get(position);
+        mApps.remove(item);
 
+        mAdapter.notifyDataSetChanged();
     }
 }
