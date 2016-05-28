@@ -33,15 +33,15 @@ public class AppUtil {
         return sAppUtil;
     }
 
-    private void addApp(App app) {
+    final public void addApp(App app) {
         mApps.add(app);
     }
 
-    private void deleteApp(App app) {
+    final public void deleteApp(App app) {
         mApps.remove(app);
     }
 
-    public ArrayList<App> getFilteredApps() {
+    final public ArrayList<App> getFilteredApps() {
         Intent startIntent = new Intent(Intent.ACTION_MAIN);
         startIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         PackageManager pm = mContext.getPackageManager();
@@ -71,7 +71,7 @@ public class AppUtil {
         return mApps;
     }
 
-    public ArrayList<App> getFullApps() {
+    final public ArrayList<App> getFullApps() {
         Intent startIntent = new Intent(Intent.ACTION_MAIN);
         startIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         PackageManager pm = mContext.getPackageManager();
