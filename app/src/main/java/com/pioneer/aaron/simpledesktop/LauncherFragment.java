@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -63,12 +64,21 @@ public class LauncherFragment extends Fragment implements RecyclerViewItemClickL
         pullRefreshLayout.setOnRefreshListener(new PullRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                pullRefreshLayout.postDelayed(new Runnable() {
+                new AsyncTask() {
+
                     @Override
-                    public void run() {
-                        pullRefreshLayout.setRefreshing(false);
+                    protected Object doInBackground(Object[] params) {
+                        mApps = AppUtil.get(getActivity()).getFilteredApps();
+                        return null;
                     }
-                }, 1000);
+
+                    @Override
+                    protected void onPostExecute(Object o) {
+                        mAdapter.notifyDataSetChanged();
+                        pullRefreshLayout.setRefreshing(false);
+                        super.onPostExecute(o);
+                    }
+                }.execute();
             }
         });
         recyclerView.setAdapter(mAdapter);
@@ -95,7 +105,7 @@ public class LauncherFragment extends Fragment implements RecyclerViewItemClickL
     public void onItemLongClick(View view, int position) {
         App item = mApps.get(position);
         mApps.remove(item);
-
+        Constant.DEFAULT_FILTER += item.getApp_label();
         mAdapter.notifyDataSetChanged();
     }
 }

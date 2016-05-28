@@ -1,5 +1,7 @@
 package com.pioneer.aaron.simpledesktop.util;
 
+import java.util.ArrayList;
+
 /**
  * Created by Aaron on 5/26/16.
  */
@@ -26,4 +28,5 @@ public class Constant {
             "邮件\n" +
             "阅读\n" +
             "音乐";
+
 }
