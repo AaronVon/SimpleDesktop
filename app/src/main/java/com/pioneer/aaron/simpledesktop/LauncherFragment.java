@@ -13,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,8 @@ import com.baoyz.widget.PullRefreshLayout;
 import com.pioneer.aaron.simpledesktop.adapter.LauncherAdapter;
 import com.pioneer.aaron.simpledesktop.adapter.RecyclerViewItemClickListener;
 import com.pioneer.aaron.simpledesktop.adapter.RecyclerViewItemLongClickListener;
+import com.pioneer.aaron.simpledesktop.helper.OnStartDragListener;
+import com.pioneer.aaron.simpledesktop.helper.SimpleItemTouchHelperCallback;
 import com.pioneer.aaron.simpledesktop.module.App;
 import com.pioneer.aaron.simpledesktop.module.AppUtil;
 import com.pioneer.aaron.simpledesktop.util.Constant;
@@ -34,22 +37,22 @@ import java.util.List;
 /**
  * Created by Aaron on 5/26/16.
  */
-public class LauncherFragment extends Fragment implements RecyclerViewItemClickListener, RecyclerViewItemLongClickListener {
+public class LauncherFragment extends Fragment implements RecyclerViewItemClickListener, OnStartDragListener {
 
     private View rootView;
     private ArrayList<App> mApps;
     private RecyclerView recyclerView;
     private PullRefreshLayout pullRefreshLayout;
     private LauncherAdapter mAdapter;
+    private ItemTouchHelper mItemTouchHelper;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         mApps = AppUtil.get(getActivity()).getFilteredApps();
-        mAdapter = new LauncherAdapter(mApps);
+        mAdapter = new LauncherAdapter(mApps,this);
         mAdapter.setItemClickListener(this);
-        mAdapter.setItemLongClickListener(this);
     }
 
     @Nullable
@@ -64,26 +67,34 @@ public class LauncherFragment extends Fragment implements RecyclerViewItemClickL
         pullRefreshLayout.setOnRefreshListener(new PullRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                new AsyncTask() {
-
-                    @Override
-                    protected Object doInBackground(Object[] params) {
-                        mApps = AppUtil.get(getActivity()).getFilteredApps();
-                        return null;
-                    }
-
-                    @Override
-                    protected void onPostExecute(Object o) {
-                        mAdapter.notifyDataSetChanged();
-                        pullRefreshLayout.setRefreshing(false);
-                        super.onPostExecute(o);
-                    }
-                }.execute();
+                new RefreshList().execute();
             }
         });
         recyclerView.setAdapter(mAdapter);
 
+        ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(mAdapter);
+        mItemTouchHelper = new ItemTouchHelper(callback);
+        mItemTouchHelper.attachToRecyclerView(recyclerView);
         return rootView;
+    }
+
+    /**
+     * Async task to refresh list
+     */
+    private class RefreshList extends AsyncTask {
+
+        @Override
+        protected Object doInBackground(Object[] params) {
+            mApps = AppUtil.get(getActivity()).getFilteredApps();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            mAdapter.notifyDataSetChanged();
+            pullRefreshLayout.setRefreshing(false);
+            super.onPostExecute(o);
+        }
     }
 
     @Override
@@ -102,10 +113,7 @@ public class LauncherFragment extends Fragment implements RecyclerViewItemClickL
     }
 
     @Override
-    public void onItemLongClick(View view, int position) {
-        App item = mApps.get(position);
-        mApps.remove(item);
-        Constant.DEFAULT_FILTER += item.getApp_label();
-        mAdapter.notifyDataSetChanged();
+    public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
+        mItemTouchHelper.startDrag(viewHolder);
     }
 }
