@@ -81,19 +81,19 @@ public class LauncherFragment extends Fragment implements RecyclerViewItemClickL
     /**
      * Async task to refresh list
      */
-    private class RefreshList extends AsyncTask {
+    private class RefreshList extends AsyncTask<Void, Void, Void> {
 
         @Override
-        protected Object doInBackground(Object[] params) {
+        protected Void doInBackground(Void... params) {
             mApps = AppUtil.get(getActivity()).getFilteredApps();
             return null;
         }
 
         @Override
-        protected void onPostExecute(Object o) {
+        protected void onPostExecute(Void aVoid) {
             mAdapter.notifyDataSetChanged();
             pullRefreshLayout.setRefreshing(false);
-            super.onPostExecute(o);
+            super.onPostExecute(aVoid);
         }
     }
 
